@@ -25,6 +25,8 @@ import android.content.Intent;
 import android.provider.Browser;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
@@ -48,6 +50,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.Config;
@@ -112,8 +115,11 @@ public class InAppBrowser extends CordovaPlugin {
                 t = SELF;
             }
             final String target = t;
-            final HashMap<String, Boolean> features = parseFeature(args.optString(2));
+            //Ami: final HashMap<String, Boolean> features = parseFeature(args.optString(2));
+            final HashMap<String, Boolean> features = parseFeature(args.optString(3));
 
+            final String windowtitle = args.getString(2); //Ami
+            
             Log.d(LOG_TAG, "target = " + target);
 
             this.cordova.getActivity().runOnUiThread(new Runnable() {
@@ -172,7 +178,7 @@ public class InAppBrowser extends CordovaPlugin {
                         // load in InAppBrowser
                         else {
                             Log.d(LOG_TAG, "loading in InAppBrowser");
-                            result = showWebPage(url, features);
+                            result = showWebPage(url, features, windowtitle);
                         }
                     }
                     // SYSTEM
@@ -183,7 +189,7 @@ public class InAppBrowser extends CordovaPlugin {
                     // BLANK - or anything else
                     else {
                         Log.d(LOG_TAG, "in blank");
-                        result = showWebPage(url, features);
+                        result = showWebPage(url, features, windowtitle);
                     }
 
                     PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, result);
@@ -465,7 +471,7 @@ public class InAppBrowser extends CordovaPlugin {
      * @param url           The url to load.
      * @param jsonObject
      */
-    public String showWebPage(final String url, HashMap<String, Boolean> features) {
+    public String showWebPage(final String url, HashMap<String, Boolean> features,final String windowtitle) {
         // Determine if we should hide the location bar.
         showLocationBar = true;
         showZoomControls = true;
@@ -594,9 +600,9 @@ public class InAppBrowser extends CordovaPlugin {
 
                 // Edit Text Box
                 edittext = new EditText(cordova.getActivity());
-                RelativeLayout.LayoutParams textLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+/*                RelativeLayout.LayoutParams textLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
                 textLayoutParams.addRule(RelativeLayout.RIGHT_OF, 1);
-                textLayoutParams.addRule(RelativeLayout.LEFT_OF, 5);
+                textLayoutParams.addRule(RelativeLayout.LEFT_OF, 7);
                 edittext.setLayoutParams(textLayoutParams);
                 edittext.setId(4);
                 edittext.setSingleLine(true);
@@ -614,7 +620,10 @@ public class InAppBrowser extends CordovaPlugin {
                         return false;
                     }
                 });
-
+*/
+                edittext.setText(url);
+                
+                
                 // Close/Done button
                 Button close = new Button(cordova.getActivity());
                 RelativeLayout.LayoutParams closeLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
@@ -638,6 +647,34 @@ public class InAppBrowser extends CordovaPlugin {
                     }
                 });
 
+                
+              //AMI:
+                // Text View for window header
+                TextView headertitle = new TextView(cordova.getActivity());
+                RelativeLayout.LayoutParams headertitleLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+                headertitleLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                headertitleLayoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+                
+                headertitle.setLayoutParams(headertitleLayoutParams);
+                headertitle.setId(7);//SAME AS EDITTEXT!!!
+                headertitle.setText(windowtitle);
+                headertitle.setTextColor(Color.BLACK);
+                headertitle.setTextSize(20);
+                headertitle.setGravity(Gravity.CENTER|Gravity.CENTER_VERTICAL);
+
+                
+                headertitle.setTypeface(Typeface.DEFAULT_BOLD);
+                //headertitle.setPadding(0, 4,0,0);
+                
+                if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN)
+                {
+                    close.setBackgroundDrawable(closeIcon);
+                }
+                else
+                {
+                    close.setBackground(closeIcon);
+                }
+                
                 // WebView
                 inAppWebView = new WebView(cordova.getActivity());
                 inAppWebView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -681,6 +718,7 @@ public class InAppBrowser extends CordovaPlugin {
                 toolbar.addView(actionButtonContainer);
                 toolbar.addView(edittext);
                 toolbar.addView(close);
+                toolbar.addView(headertitle);
 
                 // Don't add the toolbar if its been disabled
                 if (getShowLocationBar()) {
@@ -704,6 +742,13 @@ public class InAppBrowser extends CordovaPlugin {
                 if(openWindowHidden) {
                     dialog.hide();
                 }
+                
+                //AMI: hide some toolbar'sbuttons.
+
+                forward.setVisibility(View.GONE);
+                back.setVisibility(View.GONE);
+                edittext.setVisibility(View.GONE);
+
             }
         };
         this.cordova.getActivity().runOnUiThread(runnable);
