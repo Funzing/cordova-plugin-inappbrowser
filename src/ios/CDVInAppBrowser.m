@@ -73,11 +73,13 @@
 
 - (void)open:(CDVInvokedUrlCommand*)command
 {
+    
     CDVPluginResult* pluginResult;
 
     NSString* url = [command argumentAtIndex:0];
     NSString* target = [command argumentAtIndex:1 withDefault:kInAppBrowserTargetSelf];
     NSString* options = [command argumentAtIndex:2 withDefault:@"" andClass:[NSString class]];
+
 
     self.callbackId = command.callbackId;
 
@@ -114,6 +116,7 @@
 {
     CDVInAppBrowserOptions* browserOptions = [CDVInAppBrowserOptions parseOptions:options];
 
+
     if (browserOptions.clearcache) {
         NSHTTPCookie *cookie;
         NSHTTPCookieStorage *storage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
@@ -146,8 +149,11 @@
         }
     }
 
+    self.inAppBrowserViewController.titleLabel.text = options;
+    
     [self.inAppBrowserViewController showLocationBar:browserOptions.location];
     [self.inAppBrowserViewController showToolBar:browserOptions.toolbar :browserOptions.toolbarposition];
+    
     if (browserOptions.closebuttoncaption != nil) {
         [self.inAppBrowserViewController setCloseButtonTitle:browserOptions.closebuttoncaption];
     }
@@ -483,7 +489,7 @@
 
     CGRect webViewBounds = self.view.bounds;
     BOOL toolbarIsAtBottom = ![_browserOptions.toolbarposition isEqualToString:kInAppBrowserToolbarBarPositionTop];
-    webViewBounds.size.height -= _browserOptions.location ? FOOTER_HEIGHT : TOOLBAR_HEIGHT;
+//    webViewBounds.size.height -= _browserOptions.location ? FOOTER_HEIGHT : TOOLBAR_HEIGHT;
     self.webView = [[UIWebView alloc] initWithFrame:webViewBounds];
 
     self.webView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
@@ -573,21 +579,31 @@
     self.addressLabel.textColor = [UIColor colorWithWhite:1.000 alpha:1.000];
     self.addressLabel.userInteractionEnabled = NO;
 
-    NSString* frontArrowString = NSLocalizedString(@"►", nil); // create arrow from Unicode char
-    self.forwardButton = [[UIBarButtonItem alloc] initWithTitle:frontArrowString style:UIBarButtonItemStylePlain target:self action:@selector(goForward:)];
-    self.forwardButton.enabled = YES;
-    self.forwardButton.imageInsets = UIEdgeInsetsZero;
+    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 250, 40)];
+    self.titleLabel.textColor = [UIColor whiteColor];
+//    self.titleLabel.textColor =
+    self.titleLabel.textAlignment = NSTextAlignmentCenter;
+    self.titleButton = [[UIBarButtonItem alloc] initWithCustomView:self.titleLabel];
+//    self.titleButton = [[UIBarButtonItem alloc] initWithTitle:@"Shimon" style:UIBarButtonItemStylePlain target:self action:nil];
+//    NSString* frontArrowString = NSLocalizedString(@"►", nil); // create arrow from Unicode char
+//    self.forwardButton = [[UIBarButtonItem alloc] initWithTitle:frontArrowString style:UIBarButtonItemStylePlain target:self action:@selector(goForward:)];
+//    self.forwardButton.enabled = YES;
+//    self.forwardButton.imageInsets = UIEdgeInsetsZero;
+//
+//    NSString* backArrowString = NSLocalizedString(@"◄", nil); // create arrow from Unicode char
+//    self.backButton = [[UIBarButtonItem alloc] initWithTitle:backArrowString style:UIBarButtonItemStylePlain target:self action:@selector(goBack:)];
+//    self.backButton.enabled = YES;
+//    self.backButton.imageInsets = UIEdgeInsetsZero;
 
-    NSString* backArrowString = NSLocalizedString(@"◄", nil); // create arrow from Unicode char
-    self.backButton = [[UIBarButtonItem alloc] initWithTitle:backArrowString style:UIBarButtonItemStylePlain target:self action:@selector(goBack:)];
-    self.backButton.enabled = YES;
-    self.backButton.imageInsets = UIEdgeInsetsZero;
-
-    [self.toolbar setItems:@[self.closeButton, flexibleSpaceButton, self.backButton, fixedSpaceButton, self.forwardButton]];
+//    self.toolbar.translucent = NO;
+//    self.toolbar.backgroundColor = [UIColor whiteColor];
+    //[UIColor colorWithRed:247.0f/255.0f green:245.0f/255.0f blue:241.0f alpha:1.0f];
+    [self.toolbar setItems:@[self.closeButton, flexibleSpaceButton, self.titleButton, flexibleSpaceButton]];
+//    [self.toolbar setItems:@[self.closeButton, flexibleSpaceButton, self.backButton, fixedSpaceButton, self.forwardButton]];
 
     self.view.backgroundColor = [UIColor grayColor];
     [self.view addSubview:self.toolbar];
-    [self.view addSubview:self.addressLabel];
+//    [self.view addSubview:self.addressLabel];
     [self.view addSubview:self.spinner];
 }
 
@@ -918,7 +934,7 @@
         self.location = YES;
         self.toolbar = YES;
         self.closebuttoncaption = nil;
-        self.toolbarposition = kInAppBrowserToolbarBarPositionBottom;
+        self.toolbarposition = kInAppBrowserToolbarBarPositionTop;
         self.clearcache = NO;
         self.clearsessioncache = NO;
 
@@ -937,6 +953,7 @@
 + (CDVInAppBrowserOptions*)parseOptions:(NSString*)options
 {
     CDVInAppBrowserOptions* obj = [[CDVInAppBrowserOptions alloc] init];
+
 
     // NOTE: this parsing does not handle quotes within values
     NSArray* pairs = [options componentsSeparatedByString:@","];
